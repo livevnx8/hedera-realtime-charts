@@ -1,0 +1,49 @@
+[project]
+name = "hedera-realtime-charts"
+version = "0.1.0"
+description = "Ultra low-latency real-time crypto charting infrastructure"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.109.0",
+  "uvicorn>=0.27.0",
+  "websockets>=12.0",
+  "aiohttp>=3.9.0",
+  "pandas>=2.0.0",
+  "numpy>=1.24.0",
+  "numba>=0.59.0",
+  "msgpack>=1.0.0",
+  "redis>=5.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "black>=23.0.0",
+  "mypy>=1.8.0",
+]
+gpu = [
+  "cupy-cuda12x>=13.0.0",
+  "onnxruntime-gpu>=1.16.0",
+]
+frontend = [
+  "streamlit>=1.29.0",
+  "plotly>=5.18.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/livevnx8/hedera-realtime-charts"
+Repository = "https://github.com/livevnx8/hedera-realtime-charts"
+Issues = "https://github.com/livevnx8/hedera-realtime-charts/issues"
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ['py312']
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
