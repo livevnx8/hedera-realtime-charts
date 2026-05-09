@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+  <defs>
+    <style>
+      .background { fill: #1a1a2e; }
+      .grid { stroke: #333; stroke-width: 0.5; }
+      .line { fill: none; stroke: #00bfa5; stroke-width: 2; }
+      .text { font-family: Arial, sans-serif; fill: #fff; font-size: 12px; }
+      .title { font-family: Arial, sans-serif; fill: #fff; font-size: 16px; font-weight: bold; }
+      .bar { fill: #00bfa5; }
+    </style>
+  </defs>
+  
+  <rect width="600" height="400" class="background"/>
+  
+  <text x="300" y="30" class="title" text-anchor="middle">WebSocket Latency Distribution</text>
+  
+  <line x1="50" y1="350" x2="550" y2="350" class="grid"/>
+  <line x1="50" y1="50" x2="50" y2="350" class="grid"/>
+  
+  <text x="50" y="370" class="text" text-anchor="middle">0ms</text>
+  <text x="550" y="370" class="text" text-anchor="middle">100ms</text>
+  <text x="30" y="350" class="text" text-anchor="end">Count</text>
+  
+  <rect x="80" y="250" width="40" height="100" class="bar"/>
+  <rect x="130" y="180" width="40" height="170" class="bar"/>
+  <rect x="180" y="120" width="40" height="230" class="bar"/>
+  <rect x="230" y="150" width="40" height="200" class="bar"/>
+  <rect x="280" y="200" width="40" height="150" class="bar"/>
+  <rect x="330" y="280" width="40" height="70" class="bar"/>
+  <rect x="380" y="300" width="40" height="50" class="bar"/>
+  <rect x="430" y="320" width="40" height="30" class="bar"/>
+  <rect x="480" y="330" width="40" height="20" class="bar"/>
+  
+  <text x="300" y="390" class="text" text-anchor="middle">Latency (ms)</text>
+  
+  <text x="500" y="80" class="text" fill="#00bfa5">Average: 12ms</text>
+  <text x="500" y="100" class="text" fill="#00bfa5">P95: 35ms</text>
+</svg>
