@@ -13,6 +13,7 @@ from collections import defaultdict
 sys.path.insert(0, str(Path(__file__).parent))
 
 from binance_websocket import BinanceWebSocket
+from top_cryptos import TOP_50_CRYPTOS
 
 
 app = FastAPI()
@@ -78,13 +79,13 @@ async def price_callback(price_data: dict):
 binance_client = None
 try:
     binance_client = BinanceWebSocket(
-        symbols=["BTCUSDT", "ETHUSDT", "HBARUSDT", "SOLUSDT"],
+        symbols=TOP_50_CRYPTOS,  # Top 50 cryptocurrencies
         callback=price_callback
     )
 except Exception:
     print("Will use mock mode for Binance WebSocket")
     binance_client = BinanceWebSocket(
-        symbols=["BTCUSDT", "ETHUSDT", "HBARUSDT", "SOLUSDT"],
+        symbols=TOP_50_CRYPTOS,  # Top 50 cryptocurrencies
         callback=price_callback,
         mock_mode=True
     )

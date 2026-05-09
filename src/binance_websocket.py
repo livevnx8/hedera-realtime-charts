@@ -39,12 +39,59 @@ class BinanceWebSocket:
             "ETHUSDT": 3000.0,
             "HBARUSDT": 0.10,
             "SOLUSDT": 100.0,
+            "BNBUSDT": 600.0,
+            "XRPUSDT": 0.50,
+            "ADAUSDT": 0.50,
+            "AVAXUSDT": 35.0,
+            "DOGEUSDT": 0.15,
+            "DOTUSDT": 7.0,
+            "LINKUSDT": 15.0,
+            "MATICUSDT": 0.85,
+            "SHIBUSDT": 0.000025,
+            "LTCUSDT": 75.0,
+            "BCHUSDT": 400.0,
+            "ATOMUSDT": 8.0,
+            "UNIUSDT": 10.0,
+            "XLMUSDT": 0.12,
+            "ETCUSDT": 20.0,
+            "XMRUSDT": 150.0,
+            "ALGOUSDT": 0.18,
+            "ICPUSDT": 12.0,
+            "VETUSDT": 0.02,
+            "FILUSDT": 5.5,
+            "NEARUSDT": 6.0,
+            "APTUSDT": 9.0,
+            "QNTUSDT": 100.0,
+            "APEUSDT": 1.2,
+            "MKRUSDT": 2500.0,
+            "COMPUSDT": 55.0,
+            "SANDUSDT": 0.50,
+            "AAVEUSDT": 90.0,
+            "EOSUSDT": 0.60,
+            "THETAUSDT": 2.0,
+            "MANAUSDT": 0.40,
+            "AXSUSDT": 8.0,
+            "CRVUSDT": 0.60,
+            "GRTUSDT": 0.15,
+            "CHZUSDT": 0.12,
+            "HOTUSDT": 0.0008,
+            "LUNCUSDT": 0.0001,
+            "RUNEUSDT": 5.0,
+            "ZECUSDT": 35.0,
+            "KAVAUSDT": 0.80,
+            "CFXUSDT": 0.18,
+            "EGLDUSDT": 40.0,
+            "GTUSDT": 6.0,
+            "FXSUSDT": 5.0,
+            "PEPEUSDT": 0.000008,
+            "TRXUSDT": 0.12,
         }
         
         while self.running:
             for symbol in self.symbols:
                 base = base_prices.get(symbol, 100.0)
-                price = base + random.uniform(-100, 100)
+                # Add realistic price movement
+                price = base * (1 + random.uniform(-0.01, 0.01))  # +/- 1% movement
                 quantity = random.uniform(0.1, 10.0)
                 
                 price_data = {
@@ -57,7 +104,7 @@ class BinanceWebSocket:
                 
                 await self.callback(price_data)
             
-            await asyncio.sleep(1)  # Update every second in mock mode
+            await asyncio.sleep(0.1)  # Update every 100ms for realistic high-frequency data
 
     async def connect(self):
         """Connect to Binance WebSocket."""

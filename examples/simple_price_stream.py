@@ -24,9 +24,14 @@ async def price_callback(price_data):
 
 async def main():
     """Run the simple price stream example."""
-    symbols = ["BTCUSDT", "ETHUSDT", "HBARUSDT", "SOLUSDT"]
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+    from top_cryptos import TOP_50_CRYPTOS
     
-    print(f"Starting price stream for: {', '.join(symbols)}")
+    symbols = TOP_50_CRYPTOS  # Use top 50 cryptocurrencies
+    
+    print(f"Starting price stream for {len(symbols)} cryptocurrencies")
     print("Press Ctrl+C to stop\n")
     
     # Try real connection first, fall back to mock if blocked
