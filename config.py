@@ -5,7 +5,28 @@ Modify these settings to customize the behavior of the application.
 """
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Dict
+from enum import Enum
+
+
+class CoinGeckoTier(Enum):
+    """CoinGecko API tiers."""
+    FREE = "free"
+    HOBBY = "hobby"
+    PRO = "pro"
+    PRO_PLUS = "pro_plus"
+    ENTERPRISE = "enterprise"
+
+
+@dataclass
+class CoinGeckoConfig:
+    """CoinGecko API configuration with tier support."""
+    api_key: Optional[str] = None  # Set your CoinGecko API key here
+    tier: CoinGeckoTier = CoinGeckoTier.FREE
+    base_url: str = "https://api.coingecko.com/api/v3"
+    pro_base_url: str = "https://pro-api.coingecko.com/api/v3"
+    enable_cache: bool = True
+    cache_ttl: int = 60  # seconds
 
 
 @dataclass
@@ -103,6 +124,7 @@ class AppConfig:
     chart: ChartConfig = None
     performance: PerformanceConfig = None
     logging: LoggingConfig = None
+    coingecko: CoinGeckoConfig = None
     
     def __post_init__(self):
         """Initialize default configurations if not provided."""
@@ -120,6 +142,8 @@ class AppConfig:
             self.performance = PerformanceConfig()
         if self.logging is None:
             self.logging = LoggingConfig()
+        if self.coingecko is None:
+            self.coingecko = CoinGeckoConfig()
 
 
 # Global configuration instance
@@ -136,6 +160,7 @@ def load_config_from_dict(config_dict: dict) -> AppConfig:
         chart=ChartConfig(**config_dict.get("chart", {})),
         performance=PerformanceConfig(**config_dict.get("performance", {})),
         logging=LoggingConfig(**config_dict.get("logging", {})),
+        coingecko=CoinGeckoConfig(**config_dict.get("coingecko", {})),
     )
 
 

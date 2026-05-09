@@ -22,6 +22,7 @@ See [DATA_DISCLAIMER.md](DATA_DISCLAIMER.md) for full disclaimers and data limit
 ### Real-Time Data Streaming
 - **Top 50 cryptocurrencies**: BTC, ETH, HBAR, SOL, and 46 more by market cap
 - **Multiple data sources**: Binance WebSocket, CoinGecko REST, Kraken WebSocket, Hedera Mirror Node
+- **CoinGecko tier support**: Free, Hobby, Pro, Pro+, Enterprise with API key configuration
 - **Automatic fallback**: Mock mode for geographic restrictions (HTTP 451)
 - **High-frequency updates**: 100ms intervals in mock mode, 10ms with real WebSocket
 - **Connection pooling**: Health monitoring, automatic reconnection, exponential backoff
