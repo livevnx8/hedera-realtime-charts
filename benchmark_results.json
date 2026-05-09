@@ -1,0 +1,20 @@
+{
+  "websocket_latency": {
+    "avg_ms": 0,
+    "std_ms": 0,
+    "min_ms": 0,
+    "max_ms": 0
+  },
+  "msgpack_serialization": {
+    "avg_ms": 0.005323706018316443,
+    "std_ms": 0.09540300177229084
+  },
+  "json_serialization": {
+    "avg_ms": 0.01216296105121728,
+    "std_ms": 0.135177446688369
+  },
+  "cpu_aggregation": {
+    "avg_ms": 0.006246870198083343,
+    "std_ms": 0.010319328672187378
+  }
+}

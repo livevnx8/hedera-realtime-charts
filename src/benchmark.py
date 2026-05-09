@@ -1,5 +1,10 @@
 """Benchmarking for ultra low-latency crypto charting infrastructure."""
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+
 import time
 import asyncio
 import statistics
@@ -121,30 +126,30 @@ class Benchmark:
         results = {
             "websocket_latency": {
                 "avg_ms": statistics.mean(self.results.get("websocket_latency", [0])),
-                "std_ms": statistics.stdev(self.results.get("websocket_latency", [0])),
+                "std_ms": statistics.stdev(self.results.get("websocket_latency", [0])) if len(self.results.get("websocket_latency", [])) >= 2 else 0,
                 "min_ms": min(self.results.get("websocket_latency", [0])),
                 "max_ms": max(self.results.get("websocket_latency", [0])),
             },
             "msgpack_serialization": {
                 "avg_ms": statistics.mean(self.results.get("msgpack_serialization", [0])),
-                "std_ms": statistics.stdev(self.results.get("msgpack_serialization", [0])),
+                "std_ms": statistics.stdev(self.results.get("msgpack_serialization", [0])) if len(self.results.get("msgpack_serialization", [])) >= 2 else 0,
             },
             "json_serialization": {
                 "avg_ms": statistics.mean(self.results.get("json_serialization", [0])),
-                "std_ms": statistics.stdev(self.results.get("json_serialization", [0])),
+                "std_ms": statistics.stdev(self.results.get("json_serialization", [0])) if len(self.results.get("json_serialization", [])) >= 2 else 0,
             },
         }
         
         if "gpu_aggregation" in self.results:
             results["gpu_aggregation"] = {
                 "avg_ms": statistics.mean(self.results["gpu_aggregation"]),
-                "std_ms": statistics.stdev(self.results["gpu_aggregation"]),
+                "std_ms": statistics.stdev(self.results["gpu_aggregation"]) if len(self.results["gpu_aggregation"]) >= 2 else 0,
             }
         
         if "cpu_aggregation" in self.results:
             results["cpu_aggregation"] = {
                 "avg_ms": statistics.mean(self.results["cpu_aggregation"]),
-                "std_ms": statistics.stdev(self.results["cpu_aggregation"]),
+                "std_ms": statistics.stdev(self.results["cpu_aggregation"]) if len(self.results["cpu_aggregation"]) >= 2 else 0,
             }
         
         with open(filename, "w") as f:
