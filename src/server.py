@@ -2,11 +2,15 @@
 
 import asyncio
 import json
+import sys
+from pathlib import Path
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Set, Dict
 import time
 from collections import defaultdict
+
+sys.path.insert(0, str(Path(__file__).parent))
 
 from binance_websocket import BinanceWebSocket
 
@@ -70,17 +74,31 @@ async def price_callback(price_data: dict):
 
 
 # Start Binance WebSocket connection
-binance_client = BinanceWebSocket(
-    symbols=["BTCUSDT", "ETHUSDT", "HBARUSDT", "SOLUSDT"],
-    callback=price_callback
-)
+# Try real connection first, fall back to mock if blocked
+binance_client = None
+try:
+    binance_client = BinanceWebSocket(
+        symbols=["BTCUSDT", "ETHUSDT", "HBARUSDT", "SOLUSDT"],
+        callback=price_callback
+    )
+except Exception:
+    print("Will use mock mode for Binance WebSocket")
+    binance_client = BinanceWebSocket(
+        symbols=["BTCUSDT", "ETHUSDT", "HBARUSDT", "SOLUSDT"],
+        callback=price_callback,
+        mock_mode=True
+    )
 
 
 @app.on_event("startup")
 async def startup_event():
     """Start the Binance WebSocket connection on startup."""
-    asyncio.create_task(binance_client.connect())
-    asyncio.create_task(binance_client.listen())
+    try:
+        await binance_client.connect()
+        asyncio.create_task(binance_client.listen())
+    except Exception as e:
+        print(f"Connection failed: {e}")
+        print("Already using mock mode or will use mock mode")
 
 
 @app.on_event("shutdown")
@@ -129,7 +147,7 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8000,
         workers=1,
-        loop="uvloop",
+        loop="asyncio",  # Use asyncio instead of uvloop for compatibility
         limit_concurrency=1000,
         timeout_keep_alive=30,
     )

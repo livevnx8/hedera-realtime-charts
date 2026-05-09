@@ -5,6 +5,11 @@ This example demonstrates the performance benefits of using GPU acceleration
 for data processing tasks like price aggregation and volatility calculation.
 """
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
 from gpu_acceleration import GPUAccelerator
 import numpy as np
 import time

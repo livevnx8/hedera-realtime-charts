@@ -5,21 +5,24 @@ import json
 import websockets
 from typing import Dict, List, Optional, Callable
 import time
+import random
 
 
 class BinanceWebSocket:
     """Low-latency Binance WebSocket client for real-time price data."""
 
-    def __init__(self, symbols: List[str], callback: Callable):
+    def __init__(self, symbols: List[str], callback: Callable, mock_mode: bool = False):
         """
         Initialize Binance WebSocket client.
 
         Args:
             symbols: List of trading pairs (e.g., ["BTCUSDT", "ETHUSDT", "HBARUSDT"])
             callback: Async callback function to handle price updates
+            mock_mode: If True, use mock data instead of real WebSocket (for testing)
         """
         self.symbols = symbols
         self.callback = callback
+        self.mock_mode = mock_mode
         self.ws_url = "wss://stream.binance.com:9443/ws"
         self.websocket: Optional[websockets.WebSocketClientProtocol] = None
         self.running = False
@@ -29,8 +32,39 @@ class BinanceWebSocket:
         streams = [f"{symbol.lower()}@trade" for symbol in self.symbols]
         return "/".join(streams)
 
+    async def _generate_mock_data(self):
+        """Generate mock price data for testing when real connection is blocked."""
+        base_prices = {
+            "BTCUSDT": 50000.0,
+            "ETHUSDT": 3000.0,
+            "HBARUSDT": 0.10,
+            "SOLUSDT": 100.0,
+        }
+        
+        while self.running:
+            for symbol in self.symbols:
+                base = base_prices.get(symbol, 100.0)
+                price = base + random.uniform(-100, 100)
+                quantity = random.uniform(0.1, 10.0)
+                
+                price_data = {
+                    "symbol": symbol,
+                    "price": price,
+                    "quantity": quantity,
+                    "time": int(time.time() * 1000),
+                    "latency": random.uniform(5, 50),
+                }
+                
+                await self.callback(price_data)
+            
+            await asyncio.sleep(1)  # Update every second in mock mode
+
     async def connect(self):
         """Connect to Binance WebSocket."""
+        if self.mock_mode:
+            print("Running in mock mode (no real WebSocket connection)")
+            return
+
         stream = self._build_stream()
         url = f"{self.ws_url}/{stream}"
         
@@ -45,6 +79,11 @@ class BinanceWebSocket:
 
     async def listen(self):
         """Listen for price updates."""
+        if self.mock_mode:
+            self.running = True
+            await self._generate_mock_data()
+            return
+
         if not self.websocket:
             await self.connect()
 
@@ -86,15 +125,18 @@ async def example_callback(price_data: Dict):
 async def main():
     """Example usage."""
     symbols = ["BTCUSDT", "ETHUSDT", "HBARUSDT", "SOLUSDT"]
-    client = BinanceWebSocket(symbols, example_callback)
     
+    # Try real connection first, fall back to mock if blocked
     try:
+        client = BinanceWebSocket(symbols, example_callback)
         await client.connect()
         await client.listen()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        await client.close()
+    except Exception as e:
+        print(f"Real connection failed: {e}")
+        print("Falling back to mock mode...")
+        client = BinanceWebSocket(symbols, example_callback, mock_mode=True)
+        await client.connect()
+        await client.listen()
 
 
 if __name__ == "__main__":

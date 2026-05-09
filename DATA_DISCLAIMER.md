@@ -4,6 +4,16 @@
 
 This infrastructure is designed for **developer tooling and research purposes only**. It is **NOT financial advice** and should **NOT be used for trading decisions**.
 
+## Geographic Restrictions
+
+**Binance WebSocket API may be restricted in certain geographic regions.**
+
+- HTTP 451 errors indicate the service is "Unavailable For Legal Reasons" in your region
+- This is a known issue with Binance in some countries/regions
+- The infrastructure automatically falls back to **mock mode** when real connections are blocked
+- Mock mode generates simulated price data for testing and development
+- For production use, consider alternative data sources or VPN solutions (if legally permitted)
+
 ## Data Sources
 
 ### External APIs

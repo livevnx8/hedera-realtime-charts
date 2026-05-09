@@ -5,6 +5,11 @@ This example demonstrates the performance benefits of using MessagePack
 over JSON for data serialization in low-latency applications.
 """
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
 from serialization import MessagePackSerializer
 import json
 import time

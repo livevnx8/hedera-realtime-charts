@@ -6,6 +6,11 @@ real-time price updates for multiple cryptocurrencies.
 """
 
 import asyncio
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
 from binance_websocket import BinanceWebSocket
 
 
@@ -24,13 +29,17 @@ async def main():
     print(f"Starting price stream for: {', '.join(symbols)}")
     print("Press Ctrl+C to stop\n")
     
-    client = BinanceWebSocket(symbols, price_callback)
-    
+    # Try real connection first, fall back to mock if blocked
     try:
+        client = BinanceWebSocket(symbols, price_callback)
         await client.connect()
         await client.listen()
-    except KeyboardInterrupt:
-        print("\nStopping price stream...")
+    except Exception as e:
+        print(f"Real connection failed: {e}")
+        print("Falling back to mock mode...")
+        client = BinanceWebSocket(symbols, price_callback, mock_mode=True)
+        await client.connect()
+        await client.listen()
     finally:
         await client.close()
 

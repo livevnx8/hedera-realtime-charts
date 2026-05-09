@@ -7,9 +7,14 @@ correlations between different cryptocurrencies for research purposes.
 
 import asyncio
 import time
+import sys
+from pathlib import Path
 from collections import defaultdict, deque
-from binance_websocket import BinanceWebSocket
 import statistics
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+from binance_websocket import BinanceWebSocket
 
 
 class CorrelationAnalyzer:

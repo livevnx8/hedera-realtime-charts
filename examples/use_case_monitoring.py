@@ -8,7 +8,12 @@ latency metrics, and basic statistics.
 
 import asyncio
 import time
+import sys
+from pathlib import Path
 from collections import defaultdict, deque
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
 from binance_websocket import BinanceWebSocket
 
 
