@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from binance_websocket import BinanceWebSocket
 from top_cryptos import TOP_50_CRYPTOS
+from security import SecurityConfig, validate_websocket_message, log_security_event
 
 
 app = FastAPI()
@@ -31,7 +32,7 @@ app.add_middleware(
 active_connections: Set[WebSocket] = set()
 
 # Store latest price data per symbol
-price_data: Dict[str, Dict] = defaultdict(dict)
+price_data_dict: Dict[str, Dict] = defaultdict(dict)
 
 
 class ConnectionManager:
@@ -60,10 +61,18 @@ manager = ConnectionManager()
 
 
 async def price_callback(price_data: dict):
-    """Callback for Binance price updates."""
+    """Handle incoming price updates from Binance WebSocket."""
+    # Validate price data
+    if not validate_websocket_message(price_data):
+        log_security_event("invalid_price_data", {"data": price_data})
+        return
+    
+    # Add timestamp for latency tracking
+    price_data["server_timestamp"] = int(time.time() * 1000)
+    
     # Store the latest price data
     symbol = price_data["symbol"]
-    price_data[symbol] = {
+    price_data_dict[symbol] = {
         "price": price_data["price"],
         "quantity": price_data["quantity"],
         "time": price_data["time"],
@@ -114,14 +123,14 @@ async def root():
     return {
         "status": "running",
         "connections": len(active_connections),
-        "symbols": list(price_data.keys()),
+        "symbols": list(price_data_dict.keys()),
     }
 
 
 @app.get("/prices")
 async def get_prices():
     """Get the latest prices for all symbols."""
-    return dict(price_data)
+    return dict(price_data_dict)
 
 
 @app.websocket("/ws")
@@ -130,12 +139,15 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         # Send initial prices
-        await websocket.send_json({"type": "init", "data": dict(price_data)})
+        await websocket.send_json({"type": "init", "data": dict(price_data_dict)})
         
         # Keep connection alive and handle any client messages
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except Exception as e:
+        log_security_event("websocket_error", {"error": str(e)})
         manager.disconnect(websocket)
 
 

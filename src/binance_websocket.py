@@ -125,37 +125,39 @@ class BinanceWebSocket:
         self.running = True
 
     async def listen(self):
-        """Listen for price updates."""
+        """Listen for incoming WebSocket messages."""
         if self.mock_mode:
             self.running = True
             await self._generate_mock_data()
             return
-
-        if not self.websocket:
-            await self.connect()
-
+        
         try:
             while self.running:
                 message = await self.websocket.recv()
                 data = json.loads(message)
                 
-                # Extract relevant data with minimal processing
-                if "e" in data and data["e"] == "trade":
-                    price_data = {
-                        "symbol": data["s"],
-                        "price": float(data["p"]),
-                        "quantity": float(data["q"]),
-                        "time": data["T"],
-                        "latency": time.time() * 1000 - data["T"],  # Calculate latency in ms
-                    }
-                    
-                    # Call the callback with the price data
-                    await self.callback(price_data)
-
+                # Validate data structure
+                if not isinstance(data, dict):
+                    continue
+                
+                if "p" not in data or "s" not in data:
+                    continue
+                
+                # Extract price data
+                price_data = {
+                    "symbol": data["s"],
+                    "price": float(data["p"]),
+                    "quantity": float(data.get("q", 0)),
+                    "time": int(data.get("T", time.time() * 1000)),
+                    "latency": (time.time() * 1000) - int(data.get("T", time.time() * 1000)),
+                }
+                
+                await self.callback(price_data)
         except websockets.exceptions.ConnectionClosed:
-            print("Binance WebSocket connection closed")
+            print("WebSocket connection closed")
         except Exception as e:
-            print(f"Error in Binance WebSocket: {e}")
+            print(f"Error in listen: {e}")
+            raise
 
     async def close(self):
         """Close the WebSocket connection."""

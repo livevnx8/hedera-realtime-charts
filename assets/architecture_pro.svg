@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700">
+  <defs>
+    <style>
+      .background { fill: #0f0f1a; }
+      .box { fill: #1a1a2e; stroke: #00bfa5; stroke-width: 2; }
+      .box-accent { fill: #16213e; stroke: #00bfa5; stroke-width: 2; }
+      .box-data { fill: #1a1a2e; stroke: #ffd93d; stroke-width: 2; }
+      .arrow { stroke: #00bfa5; stroke-width: 2; marker-end: url(#arrowhead); }
+      .arrow-accent { stroke: #ffd93d; stroke-width: 2; marker-end: url(#arrowhead-accent); }
+      .text { font-family: 'Segoe UI', Arial, sans-serif; fill: #e0e0e0; font-size: 12px; text-anchor: middle; }
+      .text-bold { font-family: 'Segoe UI', Arial, sans-serif; fill: #ffffff; font-size: 14px; font-weight: bold; text-anchor: middle; }
+      .title { font-family: 'Segoe UI', Arial, sans-serif; fill: #00bfa5; font-size: 24px; font-weight: bold; text-anchor: middle; }
+      .subtitle { font-family: 'Segoe UI', Arial, sans-serif; fill: #ffd93d; font-size: 14px; text-anchor: middle; }
+      .metric { font-family: 'Segoe UI', Arial, sans-serif; fill: #00bfa5; font-size: 11px; text-anchor: middle; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00bfa5" />
+    </marker>
+    <marker id="arrowhead-accent" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ffd93d" />
+    </marker>
+  </defs>
+  
+  <rect width="1000" height="700" class="background"/>
+  
+  <text x="500" y="35" class="title">Hedera Realtime Charts - Ultra Low-Latency Architecture</text>
+  <text x="500" y="60" class="subtitle">Top 50 Cryptocurrencies | Sub-10ms Latency | GPU Acceleration</text>
+  
+  <!-- Data Sources -->
+  <rect x="50" y="100" width="150" height="60" class="box-data" rx="5"/>
+  <text x="125" y="125" class="text-bold">Binance</text>
+  <text x="125" y="145" class="text">WebSocket API</text>
+  
+  <rect x="220" y="100" width="150" height="60" class="box-data" rx="5"/>
+  <text x="295" y="125" class="text-bold">CoinGecko</text>
+  <text x="295" y="145" class="text">REST API</text>
+  
+  <rect x="390" y="100" width="150" height="60" class="box-data" rx="5"/>
+  <text x="465" y="125" class="text-bold">Kraken</text>
+  <text x="465" y="145" class="text">WebSocket API</text>
+  
+  <rect x="560" y="100" width="150" height="60" class="box-data" rx="5"/>
+  <text x="635" y="125" class="text-bold">Hedera</text>
+  <text x="635" y="145" class="text">Mirror Node</text>
+  
+  <rect x="730" y="100" width="150" height="60" class="box-data" rx="5"/>
+  <text x="805" y="125" class="text-bold">Mock Mode</text>
+  <text x="805" y="145" class="text">Fallback</text>
+  
+  <!-- Arrows to WebSocket Client -->
+  <line x1="125" y1="160" x2="350" y2="200" class="arrow-accent"/>
+  <line x1="295" y1="160" x2="400" y2="200" class="arrow-accent"/>
+  <line x1="465" y1="160" x2="450" y2="200" class="arrow-accent"/>
+  <line x1="635" y1="160" x2="500" y2="200" class="arrow-accent"/>
+  <line x1="805" y1="160" x2="550" y2="200" class="arrow-accent"/>
+  
+  <!-- WebSocket Client -->
+  <rect x="300" y="200" width="400" height="70" class="box" rx="5"/>
+  <text x="500" y="225" class="text-bold">WebSocket Client</text>
+  <text x="500" y="245" class="text">Async Python | TCP Optimization | Mock Fallback</text>
+  <text x="500" y="260" class="metric">50 Symbols | 100ms Updates</text>
+  
+  <!-- Arrow to Processing -->
+  <line x1="500" y1="270" x2="500" y2="310" class="arrow"/>
+  
+  <!-- Data Processing -->
+  <rect x="100" y="310" width="200" height="80" class="box-accent" rx="5"/>
+  <text x="200" y="335" class="text-bold">Serialization</text>
+  <text x="200" y="355" class="text">MessagePack</text>
+  <text x="200" y="375" class="metric">5.3μs avg | 2.28x faster</text>
+  
+  <rect x="320" y="310" width="200" height="80" class="box-accent" rx="5"/>
+  <text x="420" y="335" class="text-bold">TCP Opt</text>
+  <text x="420" y="355" class="text">NODELAY | QUICKACK</text>
+  <text x="420" y="375" class="metric">Non-blocking I/O</text>
+  
+  <rect x="540" y="310" width="200" height="80" class="box-accent" rx="5"/>
+  <text x="640" y="335" class="text-bold">GPU Accel</text>
+  <text x="640" y="355" class="text">CuPy | CUDA | ONNX</text>
+  <text x="640" y="375" class="metric">10-100x speedup</text>
+  
+  <rect x="760" y="310" width="200" height="80" class="box-accent" rx="5"/>
+  <text x="860" y="335" class="text-bold">Batch Proc</text>
+  <text x="860" y="355" class="text">Zero-copy | Queue</text>
+  <text x="860" y="375" class="metric">Reduced overhead</text>
+  
+  <!-- Arrows to Server -->
+  <line x1="200" y1="390" x2="450" y2="430" class="arrow"/>
+  <line x1="420" y1="390" x2="500" y2="430" class="arrow"/>
+  <line x1="640" y1="390" x2="550" y2="430" class="arrow"/>
+  <line x1="860" y1="390" x2="650" y2="430" class="arrow"/>
+  
+  <!-- FastAPI Server -->
+  <rect x="300" y="430" width="400" height="70" class="box" rx="5"/>
+  <text x="500" y="455" class="text-bold">FastAPI WebSocket Server</text>
+  <text x="500" y="475" class="text">Uvicorn | AsyncIO | CORS | WebSocket Broadcast</text>
+  <text x="500" y="490" class="metric">Port 8000 | 1000 Concurrency</text>
+  
+  <!-- Arrow to Frontend -->
+  <line x1="500" y1="500" x2="500" y2="540" class="arrow"/>
+  
+  <!-- Frontend -->
+  <rect x="200" y="540" width="250" height="80" class="box" rx="5"/>
+  <text x="325" y="565" class="text-bold">Streamlit</text>
+  <text x="325" y="585" class="text">Real-time Dashboard</text>
+  <text x="325" y="605" class="metric">Python | Interactive</text>
+  
+  <rect x="470" y="540" width="250" height="80" class="box" rx="5"/>
+  <text x="595" y="565" class="text-bold">Plotly.js</text>
+  <text x="595" y="585" class="text">Advanced Charting</text>
+  <text x="595" y="605" class="metric">MA | Bollinger | Volume</text>
+  
+  <rect x="740" y="540" width="200" height="80" class="box" rx="5"/>
+  <text x="840" y="565" class="text-bold">Metrics</text>
+  <text x="840" y="585" class="text">Latency Monitor</text>
+  <text x="840" y="605" class="metric">P50 | P95 | P99</text>
+  
+  <!-- Performance Footer -->
+  <rect x="50" y="650" width="900" height="40" class="box-accent" rx="5"/>
+  <text x="500" y="675" class="text-bold">Performance: 5.3μs Serialization | 6.2μs Processing | 5-50ms WebSocket | Sub-10ms End-to-End</text>
+</svg>
