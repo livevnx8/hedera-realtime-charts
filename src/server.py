@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from binance_websocket import BinanceWebSocket
 from top_cryptos import TOP_50_CRYPTOS
 from security import SecurityConfig, validate_websocket_message, log_security_event
+from connection_pool import ConnectionPool, ConnectionMonitor
 
 
 app = FastAPI()
@@ -27,6 +28,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Connection pool for health monitoring
+connection_pool = ConnectionPool(max_connections=10)
+connection_monitor = None
 
 # Store active WebSocket connections
 active_connections: Set[WebSocket] = set()
@@ -103,9 +108,16 @@ except Exception:
 @app.on_event("startup")
 async def startup_event():
     """Start the Binance WebSocket connection on startup."""
+    global connection_monitor
+    
     try:
         await binance_client.connect()
         asyncio.create_task(binance_client.listen())
+        
+        # Start connection monitor
+        connection_monitor = ConnectionMonitor(connection_pool)
+        await connection_monitor.start()
+        
     except Exception as e:
         print(f"Connection failed: {e}")
         print("Already using mock mode or will use mock mode")
@@ -114,7 +126,16 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Close the Binance WebSocket connection on shutdown."""
+    global connection_monitor
+    
     await binance_client.close()
+    
+    # Stop connection monitor
+    if connection_monitor:
+        await connection_monitor.stop()
+    
+    # Close all pooled connections
+    await connection_pool.close_all()
 
 
 @app.get("/")

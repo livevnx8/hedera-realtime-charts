@@ -10,6 +10,12 @@ import time
 from collections import defaultdict, deque
 import pandas as pd
 import numpy as np
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+from technical_indicators import TechnicalIndicators
 
 
 # Streamlit configuration
@@ -56,7 +62,7 @@ async def connect_websocket():
         st.error(f"WebSocket connection error: {e}")
 
 
-def create_advanced_chart(symbol: str):
+def create_advanced_chart(symbol: str, indicators: list = None, chart_type: str = "Line"):
     """Create an advanced candlestick chart with indicators."""
     history = st.session_state.price_history[symbol]
     
@@ -67,58 +73,100 @@ def create_advanced_chart(symbol: str):
     df = pd.DataFrame(history)
     df["time"] = pd.to_datetime(df["time"], unit="s")
     
-    # Create subplots
+    # Get prices for indicators
+    prices = df["price"].tolist()
+    highs = df["price"].tolist()  # Use price as high for line chart
+    lows = df["price"].tolist()   # Use price as low for line chart
+    
+    # Calculate indicators if requested
+    if indicators is None:
+        indicators = ["MA10", "MA30", "BB", "RSI", "MACD"]
+    
+    indicator_results = TechnicalIndicators.calculate_all_indicators(prices, highs, lows)
+    
+    # Create subplots based on indicators
+    rows = 2
+    if "RSI" in indicators or "MACD" in indicators:
+        rows = 3
+    
     fig = make_subplots(
-        rows=2, cols=1,
+        rows=rows, cols=1,
         shared_xaxes=True,
-        vertical_spacing=0.03,
-        row_heights=[0.7, 0.3],
-        subplot_titles=(f"{symbol} Price", "Volume")
+        vertical_spacing=0.02,
+        row_heights=[0.5, 0.25, 0.25] if rows == 3 else [0.7, 0.3],
+        subplot_titles=(f"{symbol} Price", "Volume", "Indicators") if rows == 3 else (f"{symbol} Price", "Volume")
     )
     
-    # Price line with area fill
-    fig.add_trace(
-        go.Scatter(
-            x=df["time"],
-            y=df["price"],
-            mode="lines",
-            name=symbol,
-            line=dict(color="#00bfa5", width=2),
-            fill="tozeroy",
-            fillcolor="rgba(0, 191, 165, 0.1)"
-        ),
-        row=1, col=1
-    )
-    
-    # Moving averages
-    if len(df) >= 10:
-        df["MA10"] = df["price"].rolling(window=10).mean()
+    # Price chart based on type
+    if chart_type == "Line":
         fig.add_trace(
             go.Scatter(
                 x=df["time"],
-                y=df["MA10"],
+                y=df["price"],
                 mode="lines",
-                name="MA10",
+                name=symbol,
+                line=dict(color="#00bfa5", width=2)
+            ),
+            row=1, col=1
+        )
+    elif chart_type == "Area":
+        fig.add_trace(
+            go.Scatter(
+                x=df["time"],
+                y=df["price"],
+                mode="lines",
+                name=symbol,
+                line=dict(color="#00bfa5", width=2),
+                fill="tozeroy",
+                fillcolor="rgba(0, 191, 165, 0.1)"
+            ),
+            row=1, col=1
+        )
+    elif chart_type == "Candlestick":
+        # Simulate OHLC from line data
+        fig.add_trace(
+            go.Candlestick(
+                x=df["time"],
+                open=df["price"].shift(1).fillna(df["price"]),
+                high=df["price"],
+                low=df["price"],
+                close=df["price"],
+                name=symbol,
+                increasing_line_color="#00bfa5",
+                decreasing_line_color="#ff6b6b"
+            ),
+            row=1, col=1
+        )
+    
+    # Moving averages
+    if "MA10" in indicators and len(df) >= 10:
+        ema20 = indicator_results["EMA20"]
+        fig.add_trace(
+            go.Scatter(
+                x=df["time"],
+                y=ema20.values,
+                mode="lines",
+                name="EMA20",
                 line=dict(color="#ff6b6b", width=1, dash="dash")
             ),
             row=1, col=1
         )
     
-    if len(df) >= 30:
-        df["MA30"] = df["price"].rolling(window=30).mean()
+    if "MA30" in indicators and len(df) >= 30:
+        ema50 = indicator_results["EMA50"]
         fig.add_trace(
             go.Scatter(
                 x=df["time"],
-                y=df["MA30"],
+                y=ema50.values,
                 mode="lines",
-                name="MA30",
+                name="EMA50",
                 line=dict(color="#ffd93d", width=1, dash="dash")
             ),
             row=1, col=1
         )
     
     # Bollinger Bands (if enough data)
-    if len(df) >= 20:
+    if "BB" in indicators and len(df) >= 20:
         df["BB_middle"] = df["price"].rolling(window=20).mean()
         df["BB_std"] = df["price"].rolling(window=20).std()
         df["BB_upper"] = df["BB_middle"] + (df["BB_std"] * 2)
@@ -149,6 +197,38 @@ def create_advanced_chart(symbol: str):
             row=1, col=1
         )
     
+    # RSI indicator
+    if "RSI" in indicators and rows == 3:
+        rsi = indicator_results["RSI"]
+        fig.add_trace(
+            go.Scatter(
+                x=df["time"],
+                y=rsi.values,
+                mode="lines",
+                name="RSI",
+                line=dict(color="#9c27b0", width=1)
+            ),
+            row=3, col=1
+        )
+        # Add overbought/oversold lines
+        fig.add_hline(y=70, line_dash="dash", line_color="rgba(255, 99, 132, 0.5)", row=3, col=1)
+        fig.add_hline(y=30, line_dash="dash", line_color="rgba(75, 192, 192, 0.5)", row=3, col=1)
+    
+    # MACD indicator
+    if "MACD" in indicators and rows == 3:
+        macd = indicator_results["MACD"]
+        fig.add_trace(
+            go.Scatter(
+                x=df["time"],
+                y=macd.values,
+                mode="lines",
+                name="MACD",
+                line=dict(color="#ff9800", width=1)
+            ),
+            row=3, col=1
+        )
+        fig.add_hline(y=0, line_dash="dash", line_color="rgba(255, 255, 255, 0.3)", row=3, col=1)
+    
     # Volume bars
     colors = ["#00bfa5" if (i > 0 and df["price"].iloc[i] >= df["price"].iloc[i-1]) else "#ff6b6b" 
               for i in range(len(df))]
@@ -164,9 +244,10 @@ def create_advanced_chart(symbol: str):
         row=2, col=1
     )
     
+    # Update axes
     fig.update_xaxes(
         title_text="Time",
-        row=2, col=1
+        row=rows, col=1
     )
     fig.update_yaxes(
         title_text="Price (USDT)",
@@ -176,11 +257,22 @@ def create_advanced_chart(symbol: str):
         title_text="Volume",
         row=2, col=1
     )
+    if rows == 3:
+        fig.update_yaxes(
+            title_text="Indicator Value",
+            row=3, col=1
+        )
+    
+    # Add crosshair
     fig.update_layout(
         template="plotly_dark",
-        height=600,
+        height=800 if rows == 3 else 600,
         margin=dict(l=0, r=0, t=30, b=0),
         hovermode="x unified",
+        xaxis_showspikes=True,
+        yaxis_showspikes=True,
+        spikedistance=-1,
+        hoverdistance=200,
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -200,11 +292,28 @@ def main():
     # Sidebar
     st.sidebar.header("Controls")
     
+    # Connection status
     if st.sidebar.button("Connect WebSocket"):
         if not st.session_state.connected:
             asyncio.run(connect_websocket())
     
     st.sidebar.write(f"Status: {'✅ Connected' if st.session_state.connected else '❌ Disconnected'}")
+    
+    # Indicator selection
+    st.sidebar.subheader("Technical Indicators")
+    available_indicators = ["MA10", "MA30", "BB", "RSI", "MACD", "Stochastic", "ATR"]
+    selected_indicators = st.sidebar.multiselect(
+        "Select Indicators",
+        available_indicators,
+        default=["MA10", "MA30", "BB", "RSI", "MACD"]
+    )
+    
+    # Chart type selection
+    st.sidebar.subheader("Chart Settings")
+    chart_type = st.sidebar.selectbox("Chart Type", ["Line", "Area", "Candlestick"])
+    
+    # Timeframe selection
+    timeframe = st.sidebar.selectbox("Timeframe", ["1m", "5m", "15m", "1h", "4h", "1d"])
     
     # Symbol selection
     symbols = list(st.session_state.price_history.keys())
@@ -219,7 +328,7 @@ def main():
         col1, col2 = st.columns([3, 1])
         
         with col1:
-            fig = create_advanced_chart(selected_symbol)
+            fig = create_advanced_chart(selected_symbol, selected_indicators, chart_type)
             st.plotly_chart(fig, use_container_width=True)
         
         with col2:
@@ -238,6 +347,22 @@ def main():
                     st.metric("Change", f"{change:+.4f}", f"{change_pct:+.2f}%")
                 
                 st.metric("Data Points", len(history))
+                
+                # Show indicator signals
+                if selected_indicators:
+                    st.subheader("Indicator Signals")
+                    prices = [h["price"] for h in history]
+                    highs = prices
+                    lows = prices
+                    indicators = TechnicalIndicators.calculate_all_indicators(prices, highs, lows)
+                    
+                    for ind_name in selected_indicators:
+                        if ind_name in indicators:
+                            result = indicators[ind_name]
+                            if result.signals:
+                                latest_signal = result.signals[-1]
+                                signal_color = "🟢" if latest_signal == "buy" else "🔴" if latest_signal == "sell" else "⚪"
+                                st.write(f"{signal_color} {ind_name}: {latest_signal.upper()}")
     
     # Show all symbols (expandable)
     with st.expander("All Symbols"):
