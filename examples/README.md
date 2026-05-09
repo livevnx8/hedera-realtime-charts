@@ -22,6 +22,20 @@ python examples/gpu_acceleration_example.py
 ```
 Shows GPU-accelerated data processing for price aggregation and volatility calculation.
 
+## Advanced Examples
+
+### Advanced Charting Example
+```bash
+python examples/advanced_charting_example.py
+```
+Demonstrates advanced technical indicators (RSI, MACD, Stochastic, EMA, ATR) with buy/sell signals.
+
+### Connection Pool Example
+```bash
+python examples/connection_pool_example.py
+```
+Shows WebSocket connection pooling with health monitoring and automatic reconnection.
+
 ## Use Case Examples
 
 ### Price Monitoring Dashboard

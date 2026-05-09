@@ -24,14 +24,19 @@ See [DATA_DISCLAIMER.md](DATA_DISCLAIMER.md) for full disclaimers and data limit
 - **Multiple data sources**: Binance WebSocket, CoinGecko REST, Kraken WebSocket, Hedera Mirror Node
 - **Automatic fallback**: Mock mode for geographic restrictions (HTTP 451)
 - **High-frequency updates**: 100ms intervals in mock mode, 10ms with real WebSocket
+- **Connection pooling**: Health monitoring, automatic reconnection, exponential backoff
 - **500 updates/second**: Current throughput with 50 symbols
 
 ### Enterprise-Grade Visualization
-- **Advanced charting**: Moving Averages (MA10, MA30), Bollinger Bands, Volume bars
+- **Advanced technical indicators**: RSI, MACD, Stochastic, EMA (20/50), ATR
+- **Buy/Sell signals**: Automatic signal generation based on indicator values
+- **Multiple chart types**: Line, Area, Candlestick with OHLC support
 - **Professional indicators**: Color-coded volume, shaded bands, subplots
+- **Crosshair & hover**: Precise price/time display with unified hover mode
 - **Real-time dashboard**: Streamlit frontend with WebSocket integration
-- **Interactive charts**: Plotly.js with hover mode and zoom
+- **Interactive charts**: Plotly.js with zoom, pan, and spike lines
 - **Grid layout**: 5-column grid for all 50 symbols
+- **Customizable**: Multi-select indicators, timeframes, and chart types
 
 ### Performance Metrics
 
@@ -138,9 +143,12 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture docum
 ### System Components
 - **Data Sources**: Binance, CoinGecko, Kraken, Hedera Mirror Node, Mock Mode
 - **WebSocket Client**: Async Python with TCP optimization and mock fallback
+- **Connection Pool**: Health monitoring, automatic reconnection, exponential backoff
+- **Technical Indicators**: RSI, MACD, Stochastic, EMA, ATR with signal generation
 - **Data Processing**: MessagePack serialization, GPU acceleration, batch processing
 - **FastAPI Server**: WebSocket broadcast with CORS and optimized uvicorn
 - **Frontend**: Streamlit with Plotly.js advanced charting
+- **Security**: Input validation, rate limiting, security event logging
 - **Monitoring**: Latency tracking with P50, P95, P99 metrics
 
 ### Data Flow
@@ -156,6 +164,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture docum
 - [Data Disclaimer](DATA_DISCLAIMER.md) - Important disclaimers and limitations
 - [Architecture](docs/ARCHITECTURE.md) - Detailed system architecture
 - [Performance](PERFORMANCE.md) - Performance benchmarks and metrics
+- [Comparison](COMPARISON.md) - Competitor comparison and analysis
 - [Examples](examples/README.md) - Example scripts and use cases
 - [Contributing](CONTRIBUTING.md) - Contribution guidelines
 
@@ -217,9 +226,12 @@ hedera-realtime-charts/
 │   ├── gpu_acceleration.py     # GPU acceleration (CUDA)
 │   ├── latency_optimization.py # Latency monitoring
 │   ├── benchmark.py            # Performance benchmarks
-│   └── top_cryptos.py          # Top 50 cryptocurrencies
+│   ├── top_cryptos.py          # Top 50 cryptocurrencies
+│   ├── technical_indicators.py # Advanced technical indicators
+│   ├── connection_pool.py     # WebSocket connection pooling
+│   └── security.py             # Security hardening
 ├── frontend/              # Streamlit frontend
-│   └── app.py              # Main dashboard
+│   └── app.py              # Main dashboard with advanced charting
 ├── examples/              # Example scripts
 │   ├── simple_price_stream.py
 │   ├── serialization_example.py
@@ -236,6 +248,7 @@ hedera-realtime-charts/
 ├── pyproject.toml         # Project configuration
 ├── README.md              # This file
 ├── PERFORMANCE.md          # Performance benchmarks
+├── COMPARISON.md           # Competitor comparison
 ├── DATA_DISCLAIMER.md      # Data disclaimers
 ├── GETTING_STARTED.md     # Quick start guide
 └── CONTRIBUTING.md        # Contribution guidelines
