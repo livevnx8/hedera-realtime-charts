@@ -182,12 +182,12 @@ class CoinGeckoClient:
             logger.error(f"Request failed: {e}")
             raise
     
-    async def get_price(self, coin_id: str, vs_currency: str = "usdt") -> Dict:
+    async def get_price(self, coin_id: str, vs_currency: str = "usd") -> Dict:
         """Get current price for a cryptocurrency.
         
         Args:
             coin_id: Coin identifier (e.g., "bitcoin", "ethereum")
-            vs_currency: Currency to convert to (default: "usdt")
+            vs_currency: Currency to convert to (default: "usd")
         
         Returns:
             Price data
@@ -207,12 +207,12 @@ class CoinGeckoClient:
         
         return await self._make_request(endpoint, params)
     
-    async def get_prices(self, coin_ids: List[str], vs_currency: str = "usdt") -> Dict:
+    async def get_prices(self, coin_ids: List[str], vs_currency: str = "usd") -> Dict:
         """Get current prices for multiple cryptocurrencies.
         
         Args:
             coin_ids: List of coin identifiers
-            vs_currency: Currency to convert to (default: "usdt")
+            vs_currency: Currency to convert to (default: "usd")
         
         Returns:
             Price data for all coins
@@ -244,14 +244,14 @@ class CoinGeckoClient:
     async def get_coin_market_data(
         self,
         coin_id: str,
-        vs_currency: str = "usdt",
+        vs_currency: str = "usd",
         days: int = 1
     ) -> Dict:
         """Get market data for a coin.
         
         Args:
             coin_id: Coin identifier
-            vs_currency: Currency to convert to
+            vs_currency: Currency to convert to (default: "usd")
             days: Number of days of data (1, 7, 30, etc.)
         
         Returns:
@@ -265,11 +265,11 @@ class CoinGeckoClient:
         
         return await self._make_request(endpoint, params)
     
-    async def get_top_coins(self, vs_currency: str = "usdt", per_page: int = 50) -> List[Dict]:
+    async def get_top_coins(self, vs_currency: str = "usd", per_page: int = 50) -> List[Dict]:
         """Get top cryptocurrencies by market cap.
         
         Args:
-            vs_currency: Currency to convert to
+            vs_currency: Currency to convert to (default: "usd")
             per_page: Number of coins per page (max 250 for free, higher for paid)
         
         Returns:

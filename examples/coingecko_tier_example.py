@@ -35,7 +35,8 @@ async def demo_free_tier():
         # Get Bitcoin price
         print(f"\n💰 Getting BTC Price...")
         price_data = await client.get_price("bitcoin")
-        print(f"   BTC Price: ${price_data['bitcoin']['usdt']:.2f}")
+        btc_price = price_data.get('bitcoin', {}).get('usd', 0)
+        print(f"   BTC Price: ${btc_price:.2f}")
         
         # Get top coins
         print(f"\n📈 Getting Top 10 Coins...")
@@ -122,7 +123,8 @@ async def demo_multiple_coins():
         
         print("\n📊 Current Prices:")
         for coin_id, data in prices.items():
-            print(f"   {coin_id.capitalize()}: ${data['usdt']:.2f}")
+            price = data.get('usd', 0)
+            print(f"   {coin_id.capitalize()}: ${price:.2f}")
         
         # Get market data
         print(f"\n📈 Getting BTC market data (7 days)...")
