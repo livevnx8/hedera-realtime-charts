@@ -3,6 +3,7 @@ import ChartPanel from './components/ChartPanel'
 import AgentVotePanel from './components/AgentVotePanel'
 import AccuracyTicker from './components/AccuracyTicker'
 import SwarmStatus from './components/SwarmStatus'
+import ErrorBoundary from './components/ErrorBoundary'
 
 export default function App() {
   useWebSocket()
@@ -29,7 +30,9 @@ export default function App() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Chart - takes 3 columns */}
         <div className="lg:col-span-3">
-          <ChartPanel />
+          <ErrorBoundary>
+            <ChartPanel />
+          </ErrorBoundary>
         </div>
 
         {/* Side panel */}

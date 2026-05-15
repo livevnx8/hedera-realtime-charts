@@ -15,6 +15,7 @@ Usage:
 
 import asyncio
 import json
+import os
 import sqlite3
 import sys
 import time
@@ -33,38 +34,68 @@ sys.path.insert(0, str(Path(__file__).parent))
 from binance_websocket import BinanceWebSocket
 
 # ── Configuration ───────────────────────────────────────────
-VNX_DB_PATH = Path("/home/vera-live-0-1/hedera-llm-api/data/fast_predictions.db")
+_vnx_db_env = os.getenv("VNX_DB_PATH")
+if _vnx_db_env:
+    VNX_DB_PATH = Path(_vnx_db_env)
+else:
+    _default = Path(__file__).resolve().parents[2] / "hedera-llm-api" / "data" / "fast_predictions.db"
+    VNX_DB_PATH = _default if _default.exists() else Path("data/fast_predictions.db")
+
 SYMBOLS = ["HBARUSDT"]  # Focus on HBAR for VNX
-PORT = 8010
+PORT = int(os.getenv("VNX_CHART_PORT", "8010"))
 
-# ── State ───────────────────────────────────────────────────
-active_connections: Set[WebSocket] = set()
-price_data_dict: Dict[str, Dict] = defaultdict(dict)
-candle_cache: Dict[str, List[Dict]] = defaultdict(list)  # OHLCV per symbol
-last_prediction_id = 0
-last_agent_weights: Dict[str, Dict] = {}
+# ── State Manager (encapsulated, testable) ──────────────────
+class StateManager:
+    """Encapsulates all server state. Replaces global mutable state."""
 
+    def __init__(self):
+        self.active_connections: Set[WebSocket] = set()
+        self.price_data_dict: Dict[str, Dict] = defaultdict(dict)
+        self.candle_cache: Dict[str, List[Dict]] = defaultdict(list)
+        self.last_prediction_id = 0
+        self.last_agent_weights: Dict[str, Dict] = {}
 
-class ConnectionManager:
-    async def connect(self, ws: WebSocket):
+    async def connect_ws(self, ws: WebSocket):
         await ws.accept()
-        active_connections.add(ws)
+        self.active_connections.add(ws)
 
-    def disconnect(self, ws: WebSocket):
-        active_connections.discard(ws)
+    def disconnect_ws(self, ws: WebSocket):
+        self.active_connections.discard(ws)
 
     async def broadcast(self, message: dict):
         dead = set()
-        for ws in active_connections:
+        for ws in self.active_connections:
             try:
                 await ws.send_json(message)
             except Exception:
                 dead.add(ws)
         for ws in dead:
-            active_connections.discard(ws)
+            self.active_connections.discard(ws)
+
+    def update_candle(self, symbol: str, ts: int, price: float, vol: float):
+        """Aggregate ticks into 1-minute OHLCV candles."""
+        minute_ts = (ts // 60000) * 60000
+        candles = self.candle_cache[symbol]
+        if not candles or candles[-1]["time"] != minute_ts:
+            candles.append({
+                "time": minute_ts,
+                "open": price,
+                "high": price,
+                "low": price,
+                "close": price,
+                "volume": vol,
+            })
+            if len(candles) > 500:
+                candles.pop(0)
+        else:
+            c = candles[-1]
+            c["high"] = max(c["high"], price)
+            c["low"] = min(c["low"], price)
+            c["close"] = price
+            c["volume"] += vol
 
 
-manager = ConnectionManager()
+state = StateManager()
 
 
 # ── Price Ingestion ─────────────────────────────────────────
@@ -73,17 +104,17 @@ async def price_callback(price_data: dict):
     symbol = price_data["symbol"]
     ts = price_data.get("time", int(time.time() * 1000))
 
-    price_data_dict[symbol] = {
+    state.price_data_dict[symbol] = {
         "price": price_data["price"],
         "quantity": price_data.get("quantity", 0),
         "time": ts,
     }
 
     # Build 1-minute candles
-    _update_candle(symbol, ts, price_data["price"], price_data.get("quantity", 0))
+    state.update_candle(symbol, ts, price_data["price"], price_data.get("quantity", 0))
 
     # Broadcast price tick
-    await manager.broadcast({
+    await state.broadcast({
         "type": "price_tick",
         "symbol": symbol,
         "price": price_data["price"],
@@ -92,36 +123,9 @@ async def price_callback(price_data: dict):
     })
 
 
-def _update_candle(symbol: str, ts: int, price: float, vol: float):
-    """Aggregate ticks into 1-minute OHLCV candles."""
-    minute_ts = (ts // 60000) * 60000
-    candles = candle_cache[symbol]
-
-    if not candles or candles[-1]["time"] != minute_ts:
-        candles.append({
-            "time": minute_ts,
-            "open": price,
-            "high": price,
-            "low": price,
-            "close": price,
-            "volume": vol,
-        })
-        # Keep last 500 candles (~8 hours)
-        if len(candles) > 500:
-            candles.pop(0)
-    else:
-        c = candles[-1]
-        c["high"] = max(c["high"], price)
-        c["low"] = min(c["low"], price)
-        c["close"] = price
-        c["volume"] += vol
-
-
 # ── Prediction Poller ─────────────────────────────────────────
 async def watch_predictions():
     """Poll VNX SQLite DB for new predictions and broadcast."""
-    global last_prediction_id, last_agent_weights
-
     while True:
         try:
             if not VNX_DB_PATH.exists():
@@ -136,11 +140,11 @@ async def watch_predictions():
                 "SELECT id, timestamp, iso_time, price_at_predict, direction, "
                 "confidence, up_prob, pattern, pattern_confidence "
                 "FROM fast_predictions WHERE id > ? ORDER BY id",
-                (last_prediction_id,)
+                (state.last_prediction_id,)
             ).fetchall()
 
             for row in rows:
-                last_prediction_id = row["id"]
+                state.last_prediction_id = row["id"]
 
                 # Fetch agent votes for this prediction
                 votes = conn.execute(
@@ -157,7 +161,7 @@ async def watch_predictions():
                         "correct": v["correct"],
                     }
 
-                await manager.broadcast({
+                await state.broadcast({
                     "type": "prediction",
                     "symbol": "HBAR",
                     "direction": row["direction"],
@@ -187,9 +191,9 @@ async def watch_predictions():
                     "accuracy": round(w["accuracy"] or 0, 3),
                 }
 
-            if new_weights != last_agent_weights:
-                last_agent_weights = new_weights
-                await manager.broadcast({
+            if new_weights != state.last_agent_weights:
+                state.last_agent_weights = new_weights
+                await state.broadcast({
                     "type": "agent_weights",
                     "weights": new_weights,
                 })
@@ -236,7 +240,7 @@ async def watch_accuracy():
 
             conn.close()
 
-            await manager.broadcast({
+            await state.broadcast({
                 "type": "accuracy",
                 "overall": overall,
                 "last_10": l10,
@@ -316,13 +320,13 @@ app.add_middleware(
 @app.get("/api/v1/prices")
 async def get_prices():
     """Latest prices for all tracked symbols."""
-    return dict(price_data_dict)
+    return dict(state.price_data_dict)
 
 
 @app.get("/api/v1/candles/{symbol}")
 async def get_candles(symbol: str, limit: int = 100):
     """OHLCV candles for a symbol."""
-    return candle_cache.get(symbol.upper(), [])[-limit:]
+    return state.candle_cache.get(symbol.upper(), [])[-limit:]
 
 
 @app.get("/api/v1/predictions")
@@ -393,14 +397,14 @@ async def get_accuracy():
 @app.websocket("/ws/vnx")
 async def websocket_endpoint(websocket: WebSocket):
     """Unified real-time stream: price ticks + predictions + accuracy."""
-    await manager.connect(websocket)
+    await state.connect_ws(websocket)
     try:
         # Send initial state
         await websocket.send_json({
             "type": "init",
-            "prices": dict(price_data_dict),
-            "candles": {s: candle_cache[s][-100:] for s in candle_cache},
-            "agent_weights": last_agent_weights,
+            "prices": dict(state.price_data_dict),
+            "candles": {s: state.candle_cache[s][-100:] for s in state.candle_cache},
+            "agent_weights": state.last_agent_weights,
         })
 
         # Keep alive, handle client pings
@@ -409,9 +413,15 @@ async def websocket_endpoint(websocket: WebSocket):
             if msg == "ping":
                 await websocket.send_text("pong")
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        state.disconnect_ws(websocket)
     except Exception:
-        manager.disconnect(websocket)
+        state.disconnect_ws(websocket)
+
+
+# Serve React dashboard static files if built
+_dashboard_dist = Path(__file__).resolve().parents[2] / "dashboard" / "dist"
+if _dashboard_dist.exists():
+    app.mount("/dashboard", StaticFiles(directory=str(_dashboard_dist), html=True), name="dashboard")
 
 
 @app.get("/")
@@ -419,6 +429,7 @@ async def root():
     return {
         "name": "VNX Chart Server",
         "version": "1.0.0",
+        "dashboard": "/dashboard" if _dashboard_dist.exists() else None,
         "endpoints": {
             "prices": "/api/v1/prices",
             "candles": "/api/v1/candles/{symbol}",

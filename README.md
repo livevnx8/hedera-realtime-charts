@@ -34,8 +34,8 @@ See [DATA_DISCLAIMER.md](DATA_DISCLAIMER.md) for full disclaimers and data limit
 - **Multiple chart types**: Line, Area, Candlestick with OHLC support
 - **Professional indicators**: Color-coded volume, shaded bands, subplots
 - **Crosshair & hover**: Precise price/time display with unified hover mode
-- **Real-time dashboard**: Streamlit frontend with WebSocket integration
-- **Interactive charts**: Plotly.js with zoom, pan, and spike lines
+- **Real-time dashboard**: React + TradingView Lightweight Charts frontend with WebSocket streaming
+- **Interactive charts**: Professional candlestick + volume with prediction markers
 - **Grid layout**: 5-column grid for all 50 symbols
 - **Customizable**: Multi-select indicators, timeframes, and chart types
 
@@ -107,11 +107,12 @@ python examples/use_case_research.py
 ### Start the Server
 
 ```bash
-# WebSocket server (port 8000)
-python -m src.server
+# Start the VNX Chart Server (port 8010)
+python -m uvicorn src.vnx_chart_server:app --host 0.0.0.0 --port 8010
 
-# Streamlit frontend (in separate terminal)
-streamlit run frontend/app.py
+# Dashboard is served automatically at http://localhost:8010/dashboard
+# Or run dev server for hot reload:
+cd dashboard && npm run dev
 ```
 
 ### Generate Performance Charts
@@ -148,7 +149,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture docum
 - **Technical Indicators**: RSI, MACD, Stochastic, EMA, ATR with signal generation
 - **Data Processing**: MessagePack serialization, GPU acceleration, batch processing
 - **FastAPI Server**: WebSocket broadcast with CORS and optimized uvicorn
-- **Frontend**: Streamlit with Plotly.js advanced charting
+- **Frontend**: React + TradingView Lightweight Charts (sub-10ms render)
 - **Security**: Input validation, rate limiting, security event logging
 - **Monitoring**: Latency tracking with P50, P95, P99 metrics
 
@@ -157,7 +158,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture docum
 2. **Optimization**: TCP socket tuning, binary serialization
 3. **Processing**: GPU-accelerated aggregation, batch processing
 4. **Broadcast**: FastAPI WebSocket server to multiple clients
-5. **Visualization**: Streamlit frontend with Plotly.js charts
+5. **Visualization**: React dashboard with TradingView Lightweight Charts
 
 ## 📚 Documentation
 
@@ -188,8 +189,10 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture docum
 - **TensorRT**: NVIDIA GPU optimization (optional)
 
 ### Frontend
-- **Streamlit**: Python web framework for dashboards
-- **Plotly.js**: Interactive charting library
+- **React 18**: Modern UI framework with Vite build system
+- **TradingView Lightweight Charts**: Sub-10ms candlestick rendering
+- **TailwindCSS**: Utility-first styling
+- **Zustand**: Lightweight state management
 - **WebSocket**: Real-time data streaming
 
 ### Optimization
@@ -231,8 +234,12 @@ hedera-realtime-charts/
 │   ├── technical_indicators.py # Advanced technical indicators
 │   ├── connection_pool.py     # WebSocket connection pooling
 │   └── security.py             # Security hardening
-├── frontend/              # Streamlit frontend
-│   └── app.py              # Main dashboard with advanced charting
+├── dashboard/             # React frontend
+│   ├── src/
+│   │   ├── components/   # ChartPanel, AgentVotePanel, etc.
+│   │   ├── hooks/        # useWebSocket
+│   │   └── stores/       # Zustand chartStore
+│   └── dist/             # Production build
 ├── examples/              # Example scripts
 │   ├── simple_price_stream.py
 │   ├── serialization_example.py

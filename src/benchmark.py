@@ -157,13 +157,22 @@ class Benchmark:
         
         print(f"Results saved to {filename}")
 
+    @staticmethod
+    def _percentile(data: List[float], percentile: float) -> float:
+        """Calculate percentile using nearest-rank method."""
+        if not data:
+            return 0.0
+        sorted_data = sorted(data)
+        index = int((percentile / 100) * (len(sorted_data) - 1))
+        return sorted_data[index]
+
     def print_summary(self):
         """Print benchmark summary."""
         print("\n=== Benchmark Summary ===")
-        
+
         if "websocket_latency" in self.results:
             latencies = self.results["websocket_latency"]
-            print(f"WebSocket Latency: {statistics.mean(latencies):.2f}ms avg, {statistics.p50(latencies):.2f}ms p50, {statistics.p95(latencies):.2f}ms p95")
+            print(f"WebSocket Latency: {statistics.mean(latencies):.2f}ms avg, {self._percentile(latencies, 50):.2f}ms p50, {self._percentile(latencies, 95):.2f}ms p95")
         
         if "msgpack_serialization" in self.results and "json_serialization" in self.results:
             msgpack = self.results["msgpack_serialization"]
